@@ -6,6 +6,7 @@ import { authMiddleware } from '../middleware/auth.middleware';
 import { json } from 'body-parser';
 import { User } from '../models/user';
 import { Role } from '../models/role';
+import { URL } from 'url';
 
 // constants
 const admin = new Role('1', 'Admin');
@@ -38,14 +39,24 @@ userRouter.get('/:id', (req, res) => {
   const user = users.find(ele => ele.userId === idParam);
   res.status(200).send(pageGenerator(['users', userTable(user)], req.session.user.role));
 });
-
+userRouter.get('*', (req, res, next) => {
+  console.log(req.originalUrl);
+  next();
+});
+userRouter.get('', (req, res, next) => {
+  console.log(req.params);
+  if (req.query.id === undefined) {
+    next();
+  }
+  res.redirect('/users/' + req.query.id);
+  next();
+});
 userRouter.get('', (req, res) => {
-  console.log('baseURL');
     res.status(200).send(pageGenerator(['users', userTable(users)], req.session.user.role));
 });
 
 function userTable(users) {
-  let data = `<form>Select by ID: <input type="number"><input type="submit"></form><Table><tr>
+  let data = `<form action="users" method="get">Select by ID: <input type="number" name="id"><input type="submit"></form><Table><tr>
   <td>ID</td>
   <td>Name</td>
   <td>Email</td>
