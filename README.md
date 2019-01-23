@@ -105,6 +105,7 @@ The ReimbursementType model is used to track what kind of reimbursement is being
     message: "Invalid Credentials"
   }
   ```
+
 ### **Find Users**
 * **URL**
   `/users`

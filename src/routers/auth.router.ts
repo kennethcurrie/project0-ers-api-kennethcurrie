@@ -1,6 +1,4 @@
 import express from 'express';
-import { resolvePtr } from 'dns';
-import { userInfo } from 'os';
 
 // static pages
 const loginPage = ['Login Page', `<p>Please login</p>

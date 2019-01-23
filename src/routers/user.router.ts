@@ -1,12 +1,8 @@
 import express from 'express';
-import { resolvePtr } from 'dns';
-import { userInfo } from 'os';
 import { pageGenerator } from '../routers/auth.router';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { json } from 'body-parser';
 import { User } from '../models/user';
 import { Role } from '../models/role';
-import { URL } from 'url';
 
 // constants
 const admin = new Role('1', 'Admin');

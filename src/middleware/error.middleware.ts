@@ -1,6 +1,3 @@
-import express from 'express';
-import { resolvePtr } from 'dns';
-import { userInfo } from 'os';
 import { pageGenerator } from '../routers/auth.router';
 
 // static pages
