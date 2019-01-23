@@ -22,32 +22,35 @@ const users = [
 export const userRouter = express.Router();
 
 // /users - find all
-userRouter.get('', [
+userRouter.get('*', [
 authMiddleware,
-(req, res) => {
-  res.json(users);
+(req, res, next) => {
+  console.log('authmiddleware');
+  next();
 }]);
 
 // /users/:id - find by id
 userRouter.get('/:id', (req, res) => {
+  console.log('getByID');
   console.log(req.params);
   const idParam = +req.params.id;
                                       // +'1' - will convert to number
   const user = users.find(ele => ele.userId === idParam);
-  res.status(200).send(pageGenerator(userTable(user), req.session.user.role));
+  res.status(200).send(pageGenerator(['users', userTable(user)], req.session.user.role));
 });
 
-userRouter.post('', (req, res) => {
-    res.status(200).send(pageGenerator(userTable(users), req.session.user.role));
+userRouter.get('', (req, res) => {
+  console.log('baseURL');
+    res.status(200).send(pageGenerator(['users', userTable(users)], req.session.user.role));
 });
 
-function userTable(users){
-  let data = `<Table><tr>
+function userTable(users) {
+  let data = `<form>Select by ID: <input type="number"><input type="submit"></form><Table><tr>
   <td>ID</td>
   <td>Name</td>
   <td>Email</td>
   </tr>`;
-  if(users.constructor == Array) {
+  if (users.constructor == Array) {
     users.forEach(element => {
       data += `<tr>
       <td><a href="/users/${element.userId}">${element.userId}</a></td>
