@@ -15,9 +15,9 @@ export function notFound(req, res) {
 }
 export function internalError(req, res) {
   if (req.session === undefined || req.session.user === undefined ||  req.session.user.role === undefined) {
-    res.status(404).send(pageGenerator(notFoundPage, ''));
+    res.status(500).send(pageGenerator(internalErrorPage, ''));
   } else {
-    res.status(404).send(pageGenerator(notFoundPage, req.session.user.role));
+    res.status(500).send(pageGenerator(internalErrorPage, req.session.user.role));
   }
 }
 export function unauthorizedError(req, res) {

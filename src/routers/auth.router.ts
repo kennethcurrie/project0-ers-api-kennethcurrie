@@ -7,14 +7,19 @@ const loginPage = ['Login Page', `<p>Please login</p>
 <p>Username:<br/><input type="text" name="username" id="username"value=""></p>
 <p>password<br/><input type="password" name="password" id="password" value="">
 <p>&nbsp;</p>
-<p><input type="submit" value="Submit"></p>
+<p><input type="submit" value="Login"></p>
 </form>
 </div>`];
 const homePage = ['Home', `<p>Welcome</p>`];
 
 // menus
-const userMenu = menuGenerator([
+const associateMenu = menuGenerator([
   ['Reimbursements', '/reimbursements'],
+  ['Logout', '/logout']
+]);
+const financeMenu = menuGenerator([
+  ['Reimbursements', '/reimbursements'],
+  ['Users', '/users'],
   ['Logout', '/logout']
 ]);
 const adminMenu = menuGenerator([
@@ -25,6 +30,7 @@ const adminMenu = menuGenerator([
 
 export const authRouter = express.Router();
 
+// response from login form
 authRouter.post('/login', (req, res) => {
   if (req.body.username === 'admin' && req.body.password === 'password') {
     const user = {
@@ -32,16 +38,18 @@ authRouter.post('/login', (req, res) => {
       role: 'admin'
     };
     req.session.user = user;
-    console.log(user);
-    // res.json(user);
+  } else if (req.body.username === 'finance-manager' && req.body.password === 'password') {
+    const user = {
+      username: req.body.username,
+      role: 'finance-manager'
+    };
+    req.session.user = user;
   } else if (req.body.username === 'associate' && req.body.password === 'password') {
     const user = {
       username: req.body.username,
       role: 'associate'
     };
     req.session.user = user;
-    console.log(user);
-    // res.json(user);
   } else {
     console.log('login failed');
     res.sendStatus(401);
@@ -49,6 +57,7 @@ authRouter.post('/login', (req, res) => {
   res.redirect('/');
 });
 
+// present login if not logged in
 authRouter.get('/', (req, res) => {
   if (req.session.user === undefined) {
     res.status(200).send(pageGenerator(loginPage, ''));
@@ -57,6 +66,7 @@ authRouter.get('/', (req, res) => {
   }
 });
 
+// redirect to home
 authRouter.get('/login', (req, res) => {
   res.redirect('/');
 });
@@ -86,8 +96,11 @@ export function pageGenerator(vars, type) {
     case 'admin':
       html += adminMenu;
       break;
-    case 'user':
-      html += userMenu;
+    case 'finance-manager':
+      html += financeMenu;
+      break;
+    case 'associate':
+      html += associateMenu;
       break;
     default:
       break;
