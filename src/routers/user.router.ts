@@ -26,23 +26,10 @@ export const userRouter = express.Router();
 userRouter.get('*', [
 authMiddleware,
 (req, res, next) => {
-  console.log('authmiddleware');
   next();
 }]);
 
-// /users/:id - find by id
-userRouter.get('/:id', (req, res) => {
-  console.log('getByID');
-  console.log(req.params);
-  const idParam = +req.params.id;
-                                      // +'1' - will convert to number
-  const user = users.find(ele => ele.userId === idParam);
-  res.status(200).send(pageGenerator(['users', userTable(user)], req.session.user.role));
-});
-userRouter.get('*', (req, res, next) => {
-  console.log(req.originalUrl);
-  next();
-});
+// change ?id=# to /#
 userRouter.get('', (req, res, next) => {
   console.log(req.params);
   if (req.query.id === undefined) {
@@ -51,12 +38,27 @@ userRouter.get('', (req, res, next) => {
   res.redirect('/users/' + req.query.id);
   next();
 });
+
+// show one user based on ID
+userRouter.get('/:id', (req, res) => {
+  console.log('getByID');
+  console.log(req.params);
+  const idParam = +req.params.id; // convert to number
+  const user = users.find(ele => ele.userId === idParam);
+  res.status(200).send(pageGenerator(['users', userTable(user)], req.session.user.role));
+});
+
+// show all users
 userRouter.get('', (req, res) => {
     res.status(200).send(pageGenerator(['users', userTable(users)], req.session.user.role));
 });
 
 function userTable(users) {
-  let data = `<form action="users" method="get">Select by ID: <input type="number" name="id"><input type="submit"></form><Table><tr>
+  let data = '';
+  if (users.constructor == Array) {
+    data += `<form action="users" method="get">Select user by ID: <input type="number" name="id"><input type="submit"></form>`;
+  }
+  data += `<Table><tr>
   <td>ID</td>
   <td>Name</td>
   <td>Email</td>
