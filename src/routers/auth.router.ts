@@ -12,21 +12,18 @@ const loginPage = ['Login Page', `<p>Please login</p>
 </div>`];
 const homePage = ['Home', `<p>Welcome</p>`];
 
-// menus
-const associateMenu = menuGenerator([
+// menus -  contains links not unique to user types
+const associateMenu = [
+  ['Reimbursements', '/reimbursements']
+];
+const financeMenu = [
   ['Reimbursements', '/reimbursements'],
-  ['Logout', '/logout']
-]);
-const financeMenu = menuGenerator([
+  ['Users', '/users']
+];
+const adminMenu = [
   ['Reimbursements', '/reimbursements'],
-  ['Users', '/users'],
-  ['Logout', '/logout']
-]);
-const adminMenu = menuGenerator([
-  ['Reimbursements', '/reimbursements'],
-  ['Users', '/users'],
-  ['Logout', '/logout']
-]);
+  ['Users', '/users']
+];
 
 export const authRouter = express.Router();
 
@@ -63,9 +60,9 @@ authRouter.post('/login', (req, res) => {
 // present login if not logged in
 authRouter.get('/', (req, res) => {
   if (req.session.user === undefined) {
-    res.status(200).send(pageGenerator(loginPage, ''));
+    res.status(200).send(pageGenerator(loginPage, '', ''));
   } else {
-    res.status(200).send(pageGenerator(homePage, req.session.user.role));
+    res.status(200).send(pageGenerator(homePage, req.session.user.role, req.session.user.id));
   }
 });
 
@@ -81,6 +78,7 @@ authRouter.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+// create page body using template
 export function pageGenerator(vars, type, id) {
   const title = vars[0];
   const body = vars[1];
@@ -93,17 +91,16 @@ export function pageGenerator(vars, type, id) {
   <div id="main">
   <nav>
   <ul id="menu" >
-  <li><a href="/">Home</a></li>
   `;
   switch (type) {
     case 'admin':
-      html += adminMenu;
+      html += menuGenerator(adminMenu, id);
       break;
     case 'finance-manager':
-      html += financeMenu;
+      html += menuGenerator(financeMenu, id);
       break;
     case 'associate':
-      html += associateMenu;
+      html += menuGenerator(associateMenu, id);
       break;
     default:
       break;
@@ -120,10 +117,16 @@ export function pageGenerator(vars, type, id) {
   return html;
 }
 
+// create page menu based on user role
 function menuGenerator(items, id) {
   let menu = ``;
+  menu += `<li><a href="/">Home</a></li>`;
   items.forEach(element => {
     menu += `<li><a href="${element[1]}">${element[0]}</a></li>`;
   });
+  if (id !== '') {
+    menu += `<li><a href="/users/${id}">Profile</a></li>`;
+    menu += `<li><a href="/logout">Logout</a></li>`;
+  }
   return menu;
 }

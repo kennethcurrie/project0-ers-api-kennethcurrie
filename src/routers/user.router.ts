@@ -1,7 +1,6 @@
 import express from 'express';
 import { pageGenerator } from '../routers/auth.router';
 import { authAdminFinanceMiddleware, authAdminMiddleware } from '../middleware/auth.middleware';
-import { unauthorizedError } from '../middleware/error.middleware';
 import { User } from '../models/user';
 import { Role } from '../models/role';
 
@@ -12,20 +11,13 @@ const associate = new Role('3', 'Associate');
 const peter = new User(1, 'peter', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin);
 const kyle = new User(2, 'kyle', 'password', 'Kyle', 'Holmes', 'kholms@projco.com', financeManager);
 const john = new User(3, 'John', 'password', 'john', 'Small', 'jsmal@projco.com', associate);
-// changing variales
+// changing variables
 let users = [];
 users = [peter, kyle, john]; // it does change, shut up lint!
 
 // we will assume all routes defined with this router
 // start with '/users'
 export const userRouter = express.Router();
-
-// /users - find all
-// userRouter.get('*', [
-// authAdminFinanceMiddleware,
-// (req, res, next) => {
-//   next();
-// }]);
 
 // change ?id=# to /#
 userRouter.get('', (req, res, next) => {
@@ -39,12 +31,12 @@ userRouter.get('', (req, res, next) => {
 userRouter.get('/:id', (req, res) => {
   const idParam = +req.params.id; // convert to number
   const user = users.find(ele => ele.userId === idParam);
-  res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role));
+  res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
 });
 
 // show all users
 userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
-    res.status(200).send(pageGenerator(['users', userTable(users, req.session.user.role, req.session.user.id)], req.session.user.role));
+    res.status(200).send(pageGenerator(['users', userTable(users, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
 }]);
 
 // patch user(makes changes)
@@ -80,6 +72,7 @@ userRouter.patch('*', [authAdminMiddleware, (req, res) => {
   res.redirect('/users');
 }]);
 
+// create content  for users and users/#
 function userTable(users, role, id) {
   let data = '';
   if (users.constructor == Array) {
