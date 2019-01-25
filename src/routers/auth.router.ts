@@ -35,19 +35,22 @@ authRouter.post('/login', (req, res) => {
   if (req.body.username === 'admin' && req.body.password === 'password') {
     const user = {
       username: req.body.username,
-      role: 'admin'
+      role: 'admin',
+      id: 1
     };
     req.session.user = user;
   } else if (req.body.username === 'finance-manager' && req.body.password === 'password') {
     const user = {
       username: req.body.username,
-      role: 'finance-manager'
+      role: 'finance-manager',
+      id: 2
     };
     req.session.user = user;
   } else if (req.body.username === 'associate' && req.body.password === 'password') {
     const user = {
       username: req.body.username,
-      role: 'associate'
+      role: 'associate',
+      id: 3
     };
     req.session.user = user;
   } else {
@@ -78,7 +81,7 @@ authRouter.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-export function pageGenerator(vars, type) {
+export function pageGenerator(vars, type, id) {
   const title = vars[0];
   const body = vars[1];
   let html = `<html>
@@ -117,7 +120,7 @@ export function pageGenerator(vars, type) {
   return html;
 }
 
-function menuGenerator(items) {
+function menuGenerator(items, id) {
   let menu = ``;
   items.forEach(element => {
     menu += `<li><a href="${element[1]}">${element[0]}</a></li>`;
