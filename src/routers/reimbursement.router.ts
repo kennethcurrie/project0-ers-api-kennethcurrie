@@ -1,23 +1,19 @@
 import express from 'express';
-import { pageGenerator } from '../routers/auth.router';
+import { pageGenerator } from './auth.router';
 import { authAdminFinanceMiddleware, authAdminMiddleware } from '../middleware/auth.middleware';
 import { User } from '../models/user';
 import { Role } from '../models/role';
-import { notFound } from '../middleware/error.middleware';
-import { seeUsers, seeRoles } from '../query';
-
 
 // constants
-// const admin = new Role('1', 'Admin');
-// const financeManager  = new Role('2', 'Finance-Manager');
-// const associate = new Role('3', 'Associate');
-// const peter = new User(1, 'peter', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin);
-// const kyle = new User(2, 'kyle', 'password', 'Kyle', 'Holmes', 'kholms@projco.com', financeManager);
-// const john = new User(3, 'John', 'password', 'john', 'Small', 'jsmal@projco.com', associate);
+const admin = new Role('1', 'Admin');
+const financeManager  = new Role('2', 'Finance-Manager');
+const associate = new Role('3', 'Associate');
+const peter = new User(1, 'peter', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin);
+const kyle = new User(2, 'kyle', 'password', 'Kyle', 'Holmes', 'kholms@projco.com', financeManager);
+const john = new User(3, 'John', 'password', 'john', 'Small', 'jsmal@projco.com', associate);
 // changing variables
- let Users = <User[]>[];
- Users = seeUsers(); // it does change, shut up lint!
- const Roles = seeRoles();
+let users = [];
+users = [peter, kyle, john]; // it does change, shut up lint!
 
 // we will assume all routes defined with this router
 // start with '/users'
@@ -34,43 +30,37 @@ userRouter.get('', (req, res, next) => {
 // show one user based on ID
 userRouter.get('/:id', (req, res) => {
   const idParam = +req.params.id; // convert to number
-  try {
-  const user = Users.find(ele => ele.userId === idParam);
-    res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
-  } catch {
-    notFound(req, res);
-  }
+  const user = users.find(ele => ele.userId === idParam);
+  res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
 });
 
 // show all users
 userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
-  console.log(Users);
-  console.log(Users[1]);
-    res.status(200).send(pageGenerator(['users', userTable(Users, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
+    res.status(200).send(pageGenerator(['users', userTable(users, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
 }]);
 
 // patch user(makes changes)
 userRouter.patch('*', [authAdminMiddleware, (req, res) => {
   console.log(req.body.userId);
-  const user = Users.find(ele => ele.userId == req.body.userId);
-  const index = Users.indexOf(user);
+  const user = users.find(ele => ele.userId == req.body.userId);
+  const index = users.indexOf(user);
   console.log('got to the patch');
   console.log(req.body.username);
-  if (req.body.username !== '') { Users[index].username = req.body.username; }
-  if (req.body.password !== '') { Users[index].password = req.body.password; }
-  if (req.body.firstName !== '') { Users[index].firstName = req.body.firstName; }
-  if (req.body.lastName !== '') { Users[index].lastName = req.body.lastName; }
-  if (req.body.email !== '') { Users[index].email = req.body.email; }
+  if (req.body.username !== '') { users[index].setUsername(req.body.username); }
+  if (req.body.password !== '') { users[index].password = req.body.password; }
+  if (req.body.firstName !== '') { users[index].firstName = req.body.firstName; }
+  if (req.body.lastName !== '') { users[index].lastName = req.body.lastName; }
+  if (req.body.email !== '') { users[index].email = req.body.email; }
   if (req.body.role !== '') {
     switch (req.body.role) {
       case 'admin':
-        Users[index].role.role = 'Admin';
+        users[index].role = admin;
       break;
       case 'finance':
-        Users[index].role.role = 'Finance-Manager';
+        users[index].role = financeManager;
       break;
       case 'associate':
-        Users[index].role.role = 'Associate';
+        users[index].role = associate;
       break;
       default:
         console.log('problem with form');

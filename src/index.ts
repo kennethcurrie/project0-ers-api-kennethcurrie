@@ -36,7 +36,7 @@ const sess = {
   secret: '8675309',
   cookie: { secure: false },
   resave: false,
-  saveUnitialized: false
+  saveUninitialized: false
 };
 
 // create session
@@ -45,6 +45,7 @@ app.use(session(sess));
 // routers
 app.use('/', authRouter);
 app.use('/users', userRouter);
+
 // error middleware
 app.use(function(req, res) {
    notFound(req, res);

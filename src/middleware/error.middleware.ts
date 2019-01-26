@@ -8,22 +8,22 @@ const internalErrorPage = ['500: Internal Server Error', `<p>500: Internal Serve
 
 export function notFound(req, res) {
   if (req.session === undefined || req.session.user === undefined || req.session.user.role === undefined) {
-    res.status(404).send(pageGenerator(notFoundPage, ''));
+    res.status(404).send(pageGenerator(notFoundPage, '', req.session.user.role));
   } else {
-    res.status(404).send(pageGenerator(notFoundPage, req.session.user.role));
+    res.status(404).send(pageGenerator(notFoundPage, req.session.user.role, req.session.user.role));
   }
 }
 export function internalError(req, res) {
   if (req.session === undefined || req.session.user === undefined ||  req.session.user.role === undefined) {
-    res.status(500).send(pageGenerator(internalErrorPage, ''));
+    res.status(500).send(pageGenerator(internalErrorPage, '', ''));
   } else {
-    res.status(500).send(pageGenerator(internalErrorPage, req.session.user.role));
+    res.status(500).send(pageGenerator(internalErrorPage, req.session.user.role, req.session.user.role));
   }
 }
 export function unauthorizedError(req, res) {
   if (req.session === undefined || req.session.user === undefined ||  req.session.user.role === undefined) {
-    res.status(401).send(pageGenerator(unauthorizedErrorPage, ''));
+    res.status(401).send(pageGenerator(unauthorizedErrorPage, '', ''));
   } else {
-    res.status(401).send(pageGenerator(unauthorizedErrorPage, req.session.user.role));
+    res.status(401).send(pageGenerator(unauthorizedErrorPage, req.session.user.role, req.session.user.role));
   }
 }
