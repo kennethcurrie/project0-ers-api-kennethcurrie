@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import session from 'express-session';
 import { authRouter } from './routers/auth.router';
 import { userRouter } from './routers/user.router';
+import { reimbursementRouter } from './routers/reimbursement.router';
 import { notFound, internalError } from './middleware/error.middleware';
 
 export const port: number = 8080;
@@ -45,6 +46,7 @@ app.use(session(sess));
 // routers
 app.use('/', authRouter);
 app.use('/users', userRouter);
+app.use('/reimbursements', reimbursementRouter);
 
 // error middleware
 app.use(function(req, res) {

@@ -4,20 +4,22 @@ import { authAdminFinanceMiddleware, authAdminMiddleware } from '../middleware/a
 import { User } from '../models/user';
 import { Role } from '../models/role';
 import { notFound } from '../middleware/error.middleware';
-import { seeUsers, seeRoles } from '../query';
+// import { seeUsers, seeRoles } from '../query';
 
 
 // constants
-// const admin = new Role('1', 'Admin');
-// const financeManager  = new Role('2', 'Finance-Manager');
-// const associate = new Role('3', 'Associate');
-// const peter = new User(1, 'peter', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin);
-// const kyle = new User(2, 'kyle', 'password', 'Kyle', 'Holmes', 'kholms@projco.com', financeManager);
-// const john = new User(3, 'John', 'password', 'john', 'Small', 'jsmal@projco.com', associate);
-// changing variables
- let Users = <User[]>[];
- Users = seeUsers(); // it does change, shut up lint!
- const Roles = seeRoles();
+// -- Roles
+const admin           = new Role(1, 'Admin'          );
+const financeManager  = new Role(2, 'Finance-Manager');
+const associate       = new Role(3, 'Associate'      );
+// - Users
+const peter = new User(1, 'pjacks', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin         );
+const kyle  = new User(2, 'kholmes',  'password', 'Kyle',  'Holmes',  'kholms@projco.com', financeManager);
+const john  = new User(3, 'jsmall',  'password', 'John',  'Small',   'jsmal@projco.com',  associate     );
+// arrays
+export const Users = [peter, kyle, john];
+// Users = seeUsers(); // it does change, shut up lint!
+// const Roles = seeRoles();
 
 // we will assume all routes defined with this router
 // start with '/users'
@@ -36,7 +38,7 @@ userRouter.get('/:id', (req, res) => {
   const idParam = +req.params.id; // convert to number
   try {
   const user = Users.find(ele => ele.userId === idParam);
-    res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
+    res.status(200).send(pageGenerator(['users', userTable(user, req.session.user)], req.session.user));
   } catch {
     notFound(req, res);
   }
@@ -46,7 +48,7 @@ userRouter.get('/:id', (req, res) => {
 userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
   console.log(Users);
   console.log(Users[1]);
-    res.status(200).send(pageGenerator(['users', userTable(Users, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
+    res.status(200).send(pageGenerator(['users', userTable(Users, req.session.user)], req.session.user));
 }]);
 
 // patch user(makes changes)
@@ -83,7 +85,9 @@ userRouter.patch('*', [authAdminMiddleware, (req, res) => {
 }]);
 
 // create content  for users and users/#
-function userTable(users, role, id) {
+function userTable(users, user) {
+  const id = user.userId;
+  const role = user.role.role;
   let data = '';
   if (users.constructor == Array) {
     data += `<form action="users" method="patch">Select user by ID: <input type="number" name="id"><input type="submit"></form>`;
@@ -109,7 +113,7 @@ function userTable(users, role, id) {
       </tr>`;
     });
   } else {
-    if (role === 'admin') {
+    if (role === 'Admin') {
       data += `<form action="" method="post">
       <input type="hidden" name="_method" value="patch">
       <tr>
@@ -143,7 +147,7 @@ function userTable(users, role, id) {
       <td colspan = "7"><input type="submit"></input></td>
       </tr>
       </form>`;
-    } else if (role === 'finance-manager') {
+    } else if (role === 'Finance-Manager') {
       data += `<form action="" method="post">
       <input type="hidden" name="_method" value="patch">
       <tr>

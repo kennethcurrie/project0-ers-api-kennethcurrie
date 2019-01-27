@@ -1,164 +1,54 @@
 import express from 'express';
 import { pageGenerator } from './auth.router';
-import { authAdminFinanceMiddleware, authAdminMiddleware } from '../middleware/auth.middleware';
-import { User } from '../models/user';
-import { Role } from '../models/role';
+import { authFinanceMiddleware } from '../middleware/auth.middleware';
+import { unauthorizedError } from '../middleware/error.middleware';
+import { ReimbursementStatus } from '../models/reimbursement-status';
+import { ReimbursementType } from '../models/reimbursement-type';
+import { Reimbursement } from '../models/reimbursement';
+import { Users } from './user.router';
+
 
 // constants
-const admin = new Role('1', 'Admin');
-const financeManager  = new Role('2', 'Finance-Manager');
-const associate = new Role('3', 'Associate');
-const peter = new User(1, 'peter', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin);
-const kyle = new User(2, 'kyle', 'password', 'Kyle', 'Holmes', 'kholms@projco.com', financeManager);
-const john = new User(3, 'John', 'password', 'john', 'Small', 'jsmal@projco.com', associate);
-// changing variables
-let users = [];
-users = [peter, kyle, john]; // it does change, shut up lint!
+// --reimbursementstatus
+const pending  = new ReimbursementStatus(1, 'Pending' );
+const approved = new ReimbursementStatus(2, 'Approved');
+const denied   = new ReimbursementStatus(3, 'Denied'  );
+// --reimbursementtype
+const lodging = new ReimbursementType(1, 'Lodging');
+const travel  = new ReimbursementType(2, 'Travel' );
+const food    = new ReimbursementType(3, 'Food'   );
+const other   = new ReimbursementType(4, 'Other'  );
+// --reimbursement
+const shots      = new Reimbursement(1, Users[2], 10, 1546300800, 1546387200, 'Shots',       Users[1], denied,   food   );
+const econolodge = new Reimbursement(2, Users[2], 20, 1546387200, 1546473600, 'Econo-Lodge', Users[1], approved, lodging);
+const busfare    = new Reimbursement(3, Users[2], 10, 1546473600, 0,          'Bus fare',    Users[1], pending,  travel );
+// arrays
+const reimbursements = [shots, econolodge, busfare];
 
 // we will assume all routes defined with this router
 // start with '/users'
-export const userRouter = express.Router();
+export const reimbursementRouter = express.Router();
 
-// change ?id=# to /#
-userRouter.get('', (req, res, next) => {
-  if (req.query.id === undefined) {
-    next();
+// generate base reimbursements page with links based on if Finance-Manager or not.
+reimbursementRouter.get('', (req, res) => {
+  const role = req.session.user.role.role;
+  const id = req.session.user.userId;
+  if (role === undefined) {
+    unauthorizedError(req, res);
   }
-  res.redirect('users/' + req.query.id);
+  let body = `<p><a href="/submit">Submit Reimbursements</a></p>`;
+  body    += `<p><a href="/userId/${id}">My Reimbursements</a></p>`;
+  if ( role === 'Finance-Manager') {
+    body  += `<p><a href="/userId">Reimbursements by user</a></p>`;
+    body  += `<p><a href="/status">Reimbursements by status</a></p>`;
+  }
+  body += '';
+  res.status(200).send(pageGenerator(['Reimbursements', body], req.session.user));
 });
 
-// show one user based on ID
-userRouter.get('/:id', (req, res) => {
-  const idParam = +req.params.id; // convert to number
-  const user = users.find(ele => ele.userId === idParam);
-  res.status(200).send(pageGenerator(['users', userTable(user, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
+reimbursementRouter.get('submit', (req, res) => {
+  const body = `<form><table><input type="hidden" name="_method" value="patch">
+  <tr><td></td><td></td></tr>
+  <table></form>`;
+  res.status(200).send(pageGenerator(['Reimbursements', body], req.session.user));
 });
-
-// show all users
-userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
-    res.status(200).send(pageGenerator(['users', userTable(users, req.session.user.role, req.session.user.id)], req.session.user.role, req.session.user.id));
-}]);
-
-// patch user(makes changes)
-userRouter.patch('*', [authAdminMiddleware, (req, res) => {
-  console.log(req.body.userId);
-  const user = users.find(ele => ele.userId == req.body.userId);
-  const index = users.indexOf(user);
-  console.log('got to the patch');
-  console.log(req.body.username);
-  if (req.body.username !== '') { users[index].setUsername(req.body.username); }
-  if (req.body.password !== '') { users[index].password = req.body.password; }
-  if (req.body.firstName !== '') { users[index].firstName = req.body.firstName; }
-  if (req.body.lastName !== '') { users[index].lastName = req.body.lastName; }
-  if (req.body.email !== '') { users[index].email = req.body.email; }
-  if (req.body.role !== '') {
-    switch (req.body.role) {
-      case 'admin':
-        users[index].role = admin;
-      break;
-      case 'finance':
-        users[index].role = financeManager;
-      break;
-      case 'associate':
-        users[index].role = associate;
-      break;
-      default:
-        console.log('problem with form');
-      break;
-    }
-    console.log('account type set');
-  }
-  console.log(user.userId);
-  res.redirect('/users');
-}]);
-
-// create content  for users and users/#
-function userTable(users, role, id) {
-  let data = '';
-  if (users.constructor == Array) {
-    data += `<form action="users" method="patch">Select user by ID: <input type="number" name="id"><input type="submit"></form>`;
-  }
-  data += `<Table><tr>
-  <td>ID</td>
-  <td>Username</td>
-  <td>Password</td>
-  <td colspan="2">Name</td>
-  <td>Email</td>
-  <td>Role</td>
-  </tr>`;
-  if (users.constructor == Array) {
-    users.forEach(element => {
-      data += `<tr>
-      <td><a href="/users/${element.userId}">${element.userId}</a></td>
-      <td>${element.username}</td>
-      <td>********</td>
-      <td>${element.firstName}</td>
-      <td>${element.lastName}</td>
-      <td><a href="mailto:${element.email}">${element.email}</a></td>
-      <td>${element.role.role}</td>
-      </tr>`;
-    });
-  } else {
-    if (role === 'admin') {
-      data += `<form action="" method="post">
-      <input type="hidden" name="_method" value="patch">
-      <tr>
-      <td><input name="userId" type="hidden" value="${users.userId}">${users.userId}</input></td>
-      <td><input name="username" value="${users.username}"></input></td>
-      <td><input name="password" value=""></input></td>
-      <td><input name="firstName" value="${users.firstName}"></input></td>
-      <td><input name="lastName" value="${users.lastName}"></input></td>
-      <td><input name="email" value="${users.email}"></input></td>
-      <td><select name="role">`;
-      switch (users.role.role) {
-        case 'Admin':
-          data += `<option value="admin" selected="true">admin</option>
-          <option value="finance">finance</option>
-          <option value="associate">associate</option>`;
-        break;
-        case 'Finance-manager':
-          data += `<option value="admin">admin</option>
-          <option value="finance-manager" selected="true">finance-manager</option>
-          <option value="associate">associate</option>`;
-        break;
-        default:
-          data += `<option value="admin">admin</option>
-          <option value="finance">finance</option>
-          <option value="associate" selected="true">associate</option>`;
-        break;
-      }
-      data += `</select></td>
-      </tr>
-      <tr>
-      <td colspan = "7"><input type="submit"></input></td>
-      </tr>
-      </form>`;
-    } else if (role === 'finance-manager') {
-      data += `<form action="" method="post">
-      <input type="hidden" name="_method" value="patch">
-      <tr>
-      <td>${users.userId}</td>
-      <td>${users.username}</td>
-      <td>********</td>
-      <td>${users.firstName}</td>
-      <td>${users.lastName}</td>
-      <td>${users.email}</td>
-      <td>${users.role.role}</td>`;
-    } else if (users.userId === id) {
-      data += `<form action="" method="post">
-      <input type="hidden" name="_method" value="patch">
-      <tr>
-      <td>${users.userId}</td>
-      <td>${users.username}</td>
-      <td>********</td>
-      <td>${users.firstName}</td>
-      <td>${users.lastName}</td>
-      <td>${users.email}</td>
-      <td>${users.role.role}</td>`;
-    } else {
-      data += `<td colspan="7">401:Unauthorized</td>`;
-    }
-  }
-  data += '</table>';
-  return data;
-}
