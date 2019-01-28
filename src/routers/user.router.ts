@@ -30,7 +30,7 @@ userRouter.get('', (req, res, next) => {
   if (req.query.id === undefined) {
     next();
   }
-  res.redirect('users/' + req.query.id);
+  res.redirect('/users/' + req.query.id);
 });
 
 // show one user based on ID
@@ -46,18 +46,13 @@ userRouter.get('/:id', (req, res) => {
 
 // show all users
 userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
-  console.log(Users);
-  console.log(Users[1]);
     res.status(200).send(pageGenerator(['users', userTable(Users, req.session.user)], req.session.user));
 }]);
 
 // patch user(makes changes)
 userRouter.patch('*', [authAdminMiddleware, (req, res) => {
-  console.log(req.body.userId);
   const user = Users.find(ele => ele.userId == req.body.userId);
   const index = Users.indexOf(user);
-  console.log('got to the patch');
-  console.log(req.body.username);
   if (req.body.username !== '') { Users[index].username = req.body.username; }
   if (req.body.password !== '') { Users[index].password = req.body.password; }
   if (req.body.firstName !== '') { Users[index].firstName = req.body.firstName; }
@@ -78,9 +73,7 @@ userRouter.patch('*', [authAdminMiddleware, (req, res) => {
         console.log('problem with form');
       break;
     }
-    console.log('account type set');
   }
-  console.log(user.userId);
   res.redirect('/users');
 }]);
 
@@ -90,7 +83,7 @@ function userTable(users, user) {
   const role = user.role.role;
   let data = '';
   if (users.constructor == Array) {
-    data += `<form action="users" method="patch">Select user by ID: <input type="number" name="id"><input type="submit"></form>`;
+    data += `<form action="users" method="patch">Select user by ID: <input type="number" name="id" min="1" max="${users.length}" value="1"><input type="submit"></form>`;
   }
   data += `<Table><tr>
   <td>ID</td>
@@ -144,13 +137,11 @@ function userTable(users, user) {
       data += `</select></td>
       </tr>
       <tr>
-      <td colspan = "7"><input type="submit"></input></td>
+      <td colspan = "7"><input type="submit" value="Update"></input></td>
       </tr>
       </form>`;
     } else if (role === 'Finance-Manager') {
-      data += `<form action="" method="post">
-      <input type="hidden" name="_method" value="patch">
-      <tr>
+      data += `<tr>
       <td>${users.userId}</td>
       <td>${users.username}</td>
       <td>********</td>
@@ -159,9 +150,7 @@ function userTable(users, user) {
       <td>${users.email}</td>
       <td>${users.role.role}</td>`;
     } else if (users.userId === id) {
-      data += `<form action="" method="post">
-      <input type="hidden" name="_method" value="patch">
-      <tr>
+      data += `<tr>
       <td>${users.userId}</td>
       <td>${users.username}</td>
       <td>********</td>

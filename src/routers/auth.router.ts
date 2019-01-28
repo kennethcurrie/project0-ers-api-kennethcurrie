@@ -7,8 +7,8 @@ import { unauthorizedError } from '../middleware/error.middleware';
 const loginPage = ['Login Page', `<p>Please login</p>
 <div id="login">
 <form method="post" action="/login">
-<p>Username:<br/><input type="text" name="username" id="username"value=""></p>
-<p>password<br/><input type="password" name="password" id="password" value="">
+<p>Username:<br/><input type="text" name="username" id="username" value=""></p>
+<p>Password<br/><input type="password" name="password" id="password" value="">
 <p>&nbsp;</p>
 <p><input type="submit" value="Login"></p>
 </form>
