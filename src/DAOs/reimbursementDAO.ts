@@ -131,7 +131,7 @@ export class ReimbursementDAO {
         ) VALUES (
             ${author},          ${amount},
             ${dateSubmitted},   0,
-            '${description}',   2,
+            '${description.replace(`'`, ``)}',   2,
             1,                  ${type}
         );`;
         try {

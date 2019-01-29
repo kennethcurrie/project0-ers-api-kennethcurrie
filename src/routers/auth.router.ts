@@ -37,6 +37,7 @@ authRouter.post('/login', (req, res) => {
   users.getAllUsers().then(function (result) {
     result.forEach(element => {
       if (req.body.username === element.username && req.body.password === element.password) {
+        element.password = '******';
         req.session.user = element;
         passed = true;
       }

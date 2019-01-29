@@ -54,15 +54,15 @@ export class UserDAO {
     public static async updateUser(reqBody): Promise<any> {
         const client = await SessionFactory.getConnectionPool().connect();
         let query = '';
-        if (reqBody.username !== '') { query += `username = '${reqBody.username}' `; }
+        if (reqBody.username !== '') { query += `username = '${reqBody.username.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.password !== '') { query += ', '; }
-        if (reqBody.password !== '') { query += `"password" = '${reqBody.password}' `; }
+        if (reqBody.password !== '') { query += `"password" = '${reqBody.password.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.firstName !== '') { query += ', '; }
-        if (reqBody.firstName !== '') { query += `firstname = '${reqBody.firstName}' `; }
+        if (reqBody.firstName !== '') { query += `firstname = '${reqBody.firstName.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.lastName !== '') { query += ', '; }
-        if (reqBody.lastName !== '') { query += `"lastname" = '${reqBody.lastName}' `; }
+        if (reqBody.lastName !== '') { query += `"lastname" = '${reqBody.lastName.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.role !== '') { query += ', '; }
-        if (reqBody.role !== '') { query += `"role" = '${reqBody.role}' `; }
+        if (reqBody.role !== '') { query += `"role" = ${reqBody.role} `; }
         await client.query(`UPDATE "user" set ${query} WHERE userid = ${reqBody.userId};`);
         client.release();
     }
