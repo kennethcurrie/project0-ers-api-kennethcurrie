@@ -108,7 +108,7 @@ reimbursementRouter.get('/r/:id', [authFinanceMiddleware, (req, res) => {
   if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
     const idParam = +req.params.id; // convert to number
     reimbursements.getReimbursementsById(idParam).then(function (result) {
-        notFound(req, res);
+      res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, true)], req.session.user));
     });
   } else {
     unauthorizedError(req, res);
@@ -134,7 +134,7 @@ function reimbursementbody(filteredReimbursements, role, form) {
     body += '<tr><td colspan="9">No Reimbursements</td></tr>';
   } else {
     filteredReimbursements.forEach(ele => {
-      const author = ele.author.User.firstName + ' ' + ele.author.User.lastName;
+      const author = ele.author.firstName + ' ' + ele.author.lastName;
       const dateSubmitted = new Date(ele.dateSubmitted * 1000).toLocaleDateString('en-US');
       let dateResolved;
       if (ele.dateResolved === 0) {
@@ -157,9 +157,9 @@ function reimbursementbody(filteredReimbursements, role, form) {
       <td>${resolver}</td>`;
       if (form && ele.status.status === 'Pending') {
         body += `<td><select name="status">
-        <option value="Pending" selected="true">Pending</option>
-        <option value="Approved">Approved</option>
-        <option value="Denied">Denied</option>
+        <option value="1" selected="true">Pending</option>
+        <option value="2">Approved</option>
+        <option value="3">Denied</option>
         </select></td>
         <td>${ele.type.type}</td></tr>
         <td colspan = "9"><input type="submit" value="Update"></input></td>`;
@@ -215,6 +215,5 @@ function statusbody(rs) {
   body += `</td>
   </tr>
   </table>`;
-  console.log(body);
   return body;
 }

@@ -7,7 +7,7 @@ export class ReimbursementStatusDAO {
     // get all reimbursement statuses
     public async getAllReimbursementStatuses(): Promise<ReimbursementStatus[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query('SELECT * from reimbursementstatus');
+        const result = await client.query('SELECT * from reimbursementstatus order by statusid');
         const reimbursementStatus = result.rows;
         const reimbursementStatusData = [];
         reimbursementStatus.forEach(reiStatus => {
@@ -16,7 +16,7 @@ export class ReimbursementStatusDAO {
                 reiStatus.status
             ));
         });
-        // client.close();
+        client.release();
         return reimbursementStatusData;
     }
 }

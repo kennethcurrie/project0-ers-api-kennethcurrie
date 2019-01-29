@@ -15,7 +15,7 @@ export class ReimbursementTypeDAO {
                 reiType.type
             ));
         });
-        // client.close();
+        client.release();
         return reimbursementTypeData;
     }
 }

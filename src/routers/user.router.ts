@@ -96,7 +96,7 @@ function userTable(users, user) {
         break;
         default:
           data += `<option value="1">Admin</option>
-          <option value="2">finance</option>
+          <option value="2">Finance-Manager</option>
           <option value="3" selected="true">Associate</option>`;
         break;
       }

@@ -1,29 +1,40 @@
 import { User } from '../models/user';
+import { Role } from '../models/role';
 import { SessionFactory } from '../util/session-factory';
-import { RoleDAO } from './roleDAO';
 
-const roles = new RoleDAO();
+// dirty, but better than death by pool
+const query = `select
+"user".userid,
+"user".username,
+"user"."password",
+"user".firstname,
+"user".lastname,
+"user".email,
+"role".roleid,
+"role"."role"
+from
+"user"
+join
+"role" on "user"."role" = "role".roleid`;
 
 export class UserDAO {
 
     // gets all users
     public async getAllUsers(): Promise<User[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query('SELECT * from "user"');
+        const result = await client.query(`${query} order by userid`);
         const user = result.rows;
         const userData = [];
-        await roles.getAllRoles().then(function (r) {
-            user.forEach(u => {
-                userData.push(new User(
-                    u.userid,
-                    u.username,
-                    u.password,
-                    u.firstname,
-                    u.lastname,
-                    u.email,
-                    r.find(ele => ele.roleId === u.role)
-                ));
-            });
+        user.forEach(u => {
+            userData.push(new User(
+                u.userid,
+                u.username,
+                u.password,
+                u.firstname,
+                u.lastname,
+                u.email,
+                new Role(u.roleid, u.role)
+            ));
         });
         client.release();
         return userData;
@@ -32,21 +43,19 @@ export class UserDAO {
     // get a user when provided an ID
     public async getUserById(userid: number): Promise<User[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`SELECT * from "user" where userId = ${userid}`);
+        const result = await client.query(`${query} where userid = ${userid} order by userid`);
         const user = result.rows;
         const userData = [];
-        await roles.getAllRoles().then(function (r) {
-            user.forEach(u => {
-                userData.push(new User(
-                    u.userid,
-                    u.username,
-                    u.password,
-                    u.firstname,
-                    u.lastname,
-                    u.email,
-                    r.find(ele => ele.roleId === u.role)
-                ));
-            });
+        user.forEach(u => {
+            userData.push(new User(
+                u.userid,
+                u.username,
+                u.password,
+                u.firstname,
+                u.lastname,
+                u.email,
+                new Role(u.roleid, u.role)
+            ));
         });
         client.release();
         return userData;
@@ -65,7 +74,6 @@ export class UserDAO {
         if (reqBody.lastName !== '') { query += `"lastname" = '${reqBody.lastName}' `; }
         if (query !== '' && reqBody.role !== '') { query += ', '; }
         if (reqBody.role !== '') { query += `"role" = '${reqBody.role}' `; }
-        console.log(`UPDATE "user" set ${query} WHERE userid = ${reqBody.userId};`);
         await client.query(`UPDATE "user" set ${query} WHERE userid = ${reqBody.userId};`);
         client.release();
     }
