@@ -50,112 +50,25 @@ join
 
 export class ReimbursementDAO {
 
-    // gets all reimbursements
+    // gets all reimbursements that match id
     public async getReimbursementsById(id: number): Promise<Reimbursement[]> {
-        const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${dbdump} where reimbursementid = ${id} order by reimbursementid`);
-        const reimbursement = result.rows;
-        const reimbursementData = [];
-        reimbursement.forEach(rei => {
-            reimbursementData.push(new Reimbursement(
-                rei.reimbursementid,
-                new User(
-                    rei.authoruserid,
-                    rei.authorusername,
-                    rei.authorpassword,
-                    rei.authorfirstname,
-                    rei.authorlastname,
-                    rei.authoremail,
-                    new Role(
-                        rei.authorroleid,
-                        rei.authorroletext
-                    )
-                ),
-                rei.amount,
-                rei.datesubmitted,
-                rei.dateresolved,
-                rei.description,
-                new User(
-                    rei.resolveruserid,
-                    rei.resolverusername,
-                    rei.resolverpassword,
-                    rei.resolverfirstname,
-                    rei.resolverlastname,
-                    rei.resolveremail,
-                    new Role(
-                        rei.resolverroleid,
-                        rei.resolverroletext
-                    )
-                ),
-                new ReimbursementStatus(
-                    rei.statusid,
-                    rei.statustext
-                ),
-                new ReimbursementType(
-                    rei.typeid,
-                    rei.typetext
-                )
-            ));
-        });
-        client.release();
-        return reimbursementData;
+        return this.getReimbursementsByquery(`reimbursementid = ${id}`);
     }
 
     // get all reimbusements that match provided status
     public async getReimbursementsByStatus(status_id: number): Promise<Reimbursement[]> {
-        const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${dbdump} where rs.statusid = ${status_id} order by reimbursementid`);
-        const reimbursement = result.rows;
-        const reimbursementData = [];
-        reimbursement.forEach(rei => {
-            reimbursementData.push(new Reimbursement(
-                rei.reimbursementid,
-                new User(
-                    rei.authoruserid,
-                    rei.authorusername,
-                    rei.authorpassword,
-                    rei.authorfirstname,
-                    rei.authorlastname,
-                    rei.authoremail,
-                    new Role(
-                        rei.authorroleid,
-                        rei.authorroletext
-                    )
-                ),
-                rei.amount,
-                rei.datesubmitted,
-                rei.dateresolved,
-                rei.description,
-                new User(
-                    rei.resolveruserid,
-                    rei.resolverusername,
-                    rei.resolverpassword,
-                    rei.resolverfirstname,
-                    rei.resolverlastname,
-                    rei.resolveremail,
-                    new Role(
-                        rei.resolverroleid,
-                        rei.resolverroletext
-                    )
-                ),
-                new ReimbursementStatus(
-                    rei.statusid,
-                    rei.statustext
-                ),
-                new ReimbursementType(
-                    rei.typeid,
-                    rei.typetext
-                )
-            ));
-        });
-        client.release();
-        return reimbursementData;
+        return this.getReimbursementsByquery(`rs.statusid = ${status_id}`);
     }
 
     //  get all reimbursements that match author(user) id
     public async getReimbursementsByUserId(user_id: number): Promise<Reimbursement[]> {
+        return this.getReimbursementsByquery(`a.userid = ${user_id}`);
+    }
+
+    //  get all reimbursements where ${modifier}
+    public async getReimbursementsByquery(modifier: string): Promise<Reimbursement[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${dbdump} where a.userid = ${user_id} order by reimbursementid`);
+        const result = await client.query(`${dbdump} where ${modifier} order by reimbursementid`);
         const reimbursement = result.rows;
         const reimbursementData = [];
         reimbursement.forEach(rei => {
@@ -232,7 +145,7 @@ export class ReimbursementDAO {
     // update reimbursement
     public static async updateReimbursement(status, reimbursementId): Promise<any> {
         const client = await SessionFactory.getConnectionPool().connect();
-        await client.query(`UPDATE reimbursement set status=${status}, resolved =${Math.round((new Date()).getTime() / 1000)} WHERE reimbursementid = ${reimbursementId};`);
+        await client.query(`UPDATE reimbursement set status=${status}, dateresolved =${Math.round((new Date()).getTime() / 1000)} WHERE reimbursementid = ${reimbursementId};`);
         client.release();
     }
 }

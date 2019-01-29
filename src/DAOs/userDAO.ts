@@ -21,29 +21,18 @@ export class UserDAO {
 
     // gets all users
     public async getAllUsers(): Promise<User[]> {
-        const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${query} order by userid`);
-        const user = result.rows;
-        const userData = [];
-        user.forEach(u => {
-            userData.push(new User(
-                u.userid,
-                u.username,
-                u.password,
-                u.firstname,
-                u.lastname,
-                u.email,
-                new Role(u.roleid, u.role)
-            ));
-        });
-        client.release();
-        return userData;
+        return this.getUserByQuery(`${true}`);
     }
 
     // get a user when provided an ID
     public async getUserById(userid: number): Promise<User[]> {
+        return this.getUserByQuery(`userid = ${userid}`);
+    }
+
+    // get a user(s) where ${modifier}
+    public async getUserByQuery(modifier: string): Promise<User[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${query} where userid = ${userid} order by userid`);
+        const result = await client.query(`${query} where ${modifier} order by userid`);
         const user = result.rows;
         const userData = [];
         user.forEach(u => {
