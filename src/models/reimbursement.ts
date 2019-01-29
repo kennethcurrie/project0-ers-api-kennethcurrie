@@ -1,5 +1,5 @@
-import { ReimbursementStatus } from './reimbursement-status';
-import { ReimbursementType } from './reimbursement-type';
+import { ReimbursementStatus } from './reimbursementstatus';
+import { ReimbursementType } from './reimbursementtype';
 import { User } from'./user';
 
 export class Reimbursement {

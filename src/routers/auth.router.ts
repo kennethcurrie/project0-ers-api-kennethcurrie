@@ -1,7 +1,8 @@
 import express from 'express';
-import { Users } from './user.router';
-import { Role } from '../models/role';
 import { unauthorizedError } from '../middleware/error.middleware';
+import { UserDAO } from '../DAOs/userDAO';
+
+const users = new UserDAO();
 
 // static pages
 const loginPage = ['Login Page', `<p>Please login</p>
@@ -33,18 +34,20 @@ export const authRouter = express.Router();
 // response from login form
 authRouter.post('/login', (req, res) => {
   let passed = false;
-  Users.forEach(element => {
-    if (req.body.username === element.username && req.body.password === element.password) {
-      req.session.user = element;
-      passed = true;
+  users.getAllUsers().then(function (result) {
+    result.forEach(element => {
+      if (req.body.username === element.username && req.body.password === element.password) {
+        req.session.user = element;
+        passed = true;
+      }
+    });
+    if (passed) {
+      res.redirect('/');
+    } else {
+      console.log('login failed');
+      unauthorizedError(req, res);
     }
   });
-  if (passed) {
-    res.redirect('/');
-  } else {
-    console.log('login failed');
-    unauthorizedError(req, res);
-  }
 });
 
 // present login if not logged in

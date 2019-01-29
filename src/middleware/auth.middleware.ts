@@ -1,10 +1,9 @@
 import { unauthorizedError } from '../middleware/error.middleware';
 
 export function authAdminMiddleware(req, res, next) {
-  const role = req.session.user.role.role;
-  if (role === undefined) {
+  if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
      unauthorizedError(req, res);
-  } else if (role === 'Admin') {
+  } else if (req.session.user.role.role === 'Admin') {
     next();
   } else {
     unauthorizedError(req, res);
@@ -12,10 +11,9 @@ export function authAdminMiddleware(req, res, next) {
 }
 
 export function authFinanceMiddleware(req, res, next) {
-  const role = req.session.user.role.role;
-  if (role === undefined) {
+  if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
      unauthorizedError(req, res);
-  } else if (role === 'Finance-Manager') {
+  } else if (req.session.user.role.role === 'Finance-Manager') {
     next();
   } else {
     unauthorizedError(req, res);
@@ -23,10 +21,9 @@ export function authFinanceMiddleware(req, res, next) {
 }
 
 export function authAdminFinanceMiddleware(req, res, next) {
-  const role = req.session.user.role.role;
-  if (role === undefined) {
+  if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
      unauthorizedError(req, res);
-  } else if (role === 'Finance-Manager' || role === 'Admin') {
+  } else if (req.session.user.role.role === 'Finance-Manager' || req.session.user.role.role === 'Admin') {
     next();
   } else {
     unauthorizedError(req, res);

@@ -1,79 +1,45 @@
 import express from 'express';
 import { pageGenerator } from '../routers/auth.router';
 import { authAdminFinanceMiddleware, authAdminMiddleware } from '../middleware/auth.middleware';
-import { User } from '../models/user';
-import { Role } from '../models/role';
 import { notFound } from '../middleware/error.middleware';
-// import { seeUsers, seeRoles } from '../query';
+import { UserDAO } from '../DAOs/userDAO';
 
-
-// constants
-// -- Roles
-const admin           = new Role(1, 'Admin'          );
-const financeManager  = new Role(2, 'Finance-Manager');
-const associate       = new Role(3, 'Associate'      );
-// - Users
-const peter = new User(1, 'pjacks', 'password', 'Peter', 'Jackson', 'pjacks@projco.com', admin         );
-const kyle  = new User(2, 'kholmes',  'password', 'Kyle',  'Holmes',  'kholms@projco.com', financeManager);
-const john  = new User(3, 'jsmall',  'password', 'John',  'Small',   'jsmal@projco.com',  associate     );
-// arrays
-export const Users = [peter, kyle, john];
-// Users = seeUsers(); // it does change, shut up lint!
-// const Roles = seeRoles();
-
-// we will assume all routes defined with this router
-// start with '/users'
 export const userRouter = express.Router();
+
+const users = new UserDAO();
 
 // change ?id=# to /#
 userRouter.get('', (req, res, next) => {
   if (req.query.id === undefined) {
     next();
-  }
-  res.redirect('/users/' + req.query.id);
-});
-
-// show one user based on ID
-userRouter.get('/:id', (req, res) => {
-  const idParam = +req.params.id; // convert to number
-  try {
-  const user = Users.find(ele => ele.userId === idParam);
-    res.status(200).send(pageGenerator(['users', userTable(user, req.session.user)], req.session.user));
-  } catch {
-    notFound(req, res);
+  } else {
+    res.redirect('/users/' + req.query.id);
   }
 });
 
 // show all users
-userRouter.get('', [authAdminFinanceMiddleware, (req, res) => {
-    res.status(200).send(pageGenerator(['users', userTable(Users, req.session.user)], req.session.user));
+userRouter.get('/', [authAdminFinanceMiddleware, (req, res) => {
+  users.getAllUsers().then(function (result) {
+    res.status(200).send(pageGenerator(['Users', userTable(result, req.session.user)], req.session.user));
+  });
 }]);
+
+// show one user based on ID
+userRouter.get('/:id', (req, res) => {
+  const idParam = +req.params.id; // convert to number
+  users.getAllUsers().then(function (result) {
+    try {
+      const user = result.find(ele => ele.userId === idParam);
+      res.status(200).send(pageGenerator(['users', userTable(user, req.session.user)], req.session.user));
+    } catch {
+      notFound(req, res);
+    }
+  });
+});
 
 // patch user(makes changes)
 userRouter.patch('*', [authAdminMiddleware, (req, res) => {
-  const user = Users.find(ele => ele.userId == req.body.userId);
-  const index = Users.indexOf(user);
-  if (req.body.username !== '') { Users[index].username = req.body.username; }
-  if (req.body.password !== '') { Users[index].password = req.body.password; }
-  if (req.body.firstName !== '') { Users[index].firstName = req.body.firstName; }
-  if (req.body.lastName !== '') { Users[index].lastName = req.body.lastName; }
-  if (req.body.email !== '') { Users[index].email = req.body.email; }
-  if (req.body.role !== '') {
-    switch (req.body.role) {
-      case 'admin':
-        Users[index].role.role = 'Admin';
-      break;
-      case 'finance':
-        Users[index].role.role = 'Finance-Manager';
-      break;
-      case 'associate':
-        Users[index].role.role = 'Associate';
-      break;
-      default:
-        console.log('problem with form');
-      break;
-    }
-  }
+  UserDAO.updateUser(req.body);
   res.redirect('/users');
 }]);
 
@@ -119,19 +85,19 @@ function userTable(users, user) {
       <td><select name="role">`;
       switch (users.role.role) {
         case 'Admin':
-          data += `<option value="admin" selected="true">admin</option>
-          <option value="finance">finance</option>
-          <option value="associate">associate</option>`;
+          data += `<option value="1" selected="true">Admin</option>
+          <option value="2">Finance-Manager</option>
+          <option value="3">Associate</option>`;
         break;
-        case 'Finance-manager':
-          data += `<option value="admin">admin</option>
-          <option value="finance-manager" selected="true">finance-manager</option>
-          <option value="associate">associate</option>`;
+        case 'Finance-Manager':
+          data += `<option value="1">Admin</option>
+          <option value="2" selected="true">Finance-Manager</option>
+          <option value="3">Associate</option>`;
         break;
         default:
-          data += `<option value="admin">admin</option>
-          <option value="finance">finance</option>
-          <option value="associate" selected="true">associate</option>`;
+          data += `<option value="1">Admin</option>
+          <option value="2">finance</option>
+          <option value="3" selected="true">Associate</option>`;
         break;
       }
       data += `</select></td>

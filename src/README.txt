@@ -1,1 +1,0 @@
-rename data.example.ts to data.ts and change the strings to match your AWS server.

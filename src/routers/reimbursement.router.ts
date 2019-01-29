@@ -1,32 +1,15 @@
 import express from 'express';
 import { pageGenerator } from './auth.router';
 import { authFinanceMiddleware } from '../middleware/auth.middleware';
-import { unauthorizedError } from '../middleware/error.middleware';
-import { ReimbursementStatus } from '../models/reimbursement-status';
-import { ReimbursementType } from '../models/reimbursement-type';
-import { Reimbursement } from '../models/reimbursement';
-import { Users } from './user.router';
-import bodyParser = require('body-parser');
+import { unauthorizedError, notFound } from '../middleware/error.middleware';
+import { ReimbursementStatusDAO } from '../DAOs/reimbursementstatusDAO';
+import { ReimbursementDAO } from '../DAOs/reimbursementDAO';
+import { UserDAO } from '../DAOs/userDAO';
 
-
-// constants
-// --reimbursementstatus
-const pending  = new ReimbursementStatus(1, 'Pending' );
-const approved = new ReimbursementStatus(2, 'Approved');
-const denied   = new ReimbursementStatus(3, 'Denied'  );
-// --reimbursementtype
-const lodging = new ReimbursementType(1, 'Lodging');
-const travel  = new ReimbursementType(2, 'Travel' );
-const food    = new ReimbursementType(3, 'Food'   );
-const other   = new ReimbursementType(4, 'Other'  );
-// --reimbursement
-const shots      = new Reimbursement(1, Users[2], 10, 1546300800, 1546387200, 'Shots',       Users[1], denied,   food   );
-const econolodge = new Reimbursement(2, Users[2], 20, 1546387200, 1546473600, 'Econo-Lodge', Users[1], approved, lodging);
-const busfare    = new Reimbursement(3, Users[2], 10, 1546473600, 0,          'Bus fare',    Users[1], pending,  travel );
-// arrays
-const reimbursementstatuses = [pending, approved, denied];
-const reimbursementtypes = [lodging, travel, food, other];
-const reimbursements = [shots, econolodge, busfare];
+// DB
+const users = new UserDAO();
+const statuses = new ReimbursementStatusDAO();
+const reimbursements = new ReimbursementDAO();
 
 // we will assume all routes defined with this router
 // start with '/users'
@@ -49,11 +32,9 @@ reimbursementRouter.get('', (req, res) => {
   res.status(200).send(pageGenerator(['Reimbursements', body], req.session.user));
 });
 
-// Approve or Deny Reiumbursement
+// approve or deny reiumbursement
 reimbursementRouter.patch('', [authFinanceMiddleware, (req, res) => {
-  const patched = reimbursements.find(ele => ele.reimbursementId == req.body.reimbursementId);
-  const index = reimbursements.indexOf(patched);
-  reimbursements[index].status = reimbursementstatuses.find(ele => ele.status === req.body.status);
+  ReimbursementDAO.updateReimbursement(req.body.status, req.body.reimbursementId);
   res.redirect(`/reimbursements/r/${req.body.reimbursementId}`);
 }]);
 
@@ -63,10 +44,10 @@ reimbursementRouter.get('/submit', (req, res) => {
   <tr><td>Description</td><td><input name="description" id="description"></input></td></tr>
   <tr><td>Amount</td><td>$<input name="amount" id="amount" type="number" step=".01" min=".01"></input></td></tr>
   <tr>Type<td>Type</td><td><select name="type">
-  <option name="Lodging" selected="true">Lodging</option>
-  <option name="Travel">Travel</option>
-  <option name="Food">Food</option>
-  <option name="Other">Other</option>
+  <option name="Lodging" selected="true" value="1">Lodging</option>
+  <option name="Travel" value="2">Travel</option>
+  <option name="Food" value="3">Food</option>
+  <option name="Other" value="4">Other</option>
   </select></td></tr>
   <tr><td colspan="2"><input type="submit" value="Submit"></input></td></tr>
   <table></form>`;
@@ -75,46 +56,38 @@ reimbursementRouter.get('/submit', (req, res) => {
 
 // Submit new reimbursement
 reimbursementRouter.post('', (req, res) => {
+  const b = req.body;
   const id = req.session.user.userId;
-  let reimbursementid = req.body.reimbursementid;
-  let type =  other;
-  reimbursementtypes.forEach(element => {
-    if (req.body.type === element.type) {
-      type = element;
-    }
-  });
-
-  reimbursements.forEach(ele => {
-    if (ele.reimbursementId > reimbursementid) {
-      reimbursementid = ele.reimbursementId;
-    }
-  });
-  reimbursementid++;
-
-  reimbursements.push(new Reimbursement(reimbursementid, req.session.user, req.body.amount, Math.round((new Date()).getTime() / 1000), 0, req.body.description, Users[2], pending, type));
+  const today = Math.round((new Date()).getTime() / 1000);
+  ReimbursementDAO.addReimbursements(id, b.amount, today, b.description, b.type);
   res.redirect(`/reimbursements/author/userId/${id}`);
 });
 
 // Show all users
 reimbursementRouter.get('/author', [authFinanceMiddleware, (req, res) => {
-    res.status(200).send(pageGenerator(['Users', userbody()], req.session.user));
+  users.getAllUsers().then(function (result) {
+    res.status(200).send(pageGenerator(['Users', userbody(result)], req.session.user));
+  });
 }]);
 
 // Show all Statuses
 reimbursementRouter.get('/status', [authFinanceMiddleware, (req, res) => {
-  res.status(200).send(pageGenerator(['Users', statusbody()], req.session.user));
+  statuses.getAllReimbursementStatuses().then(function (result) {
+    res.status(200).send(pageGenerator(['Users', statusbody(result)], req.session.user));
+  });
 }]);
 
 // get reimbursements by User
 reimbursementRouter.get('/author/userId/:id', (req, res) => {
-  if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
-    const userReimbursements = [];
-    reimbursements.forEach(element => {
-      if (element.author.userId === +req.params.id) {
-        userReimbursements.push(element);
+  if (req.params.id == req.session.user.id || req.session.user.role.role === 'Finance-Manager') {
+    const idParam = +req.params.id; // convert to number
+    reimbursements.getReimbursementsByUserId(idParam).then(function (result) {
+      try {
+        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
+      } catch {
+        notFound(req, res);
       }
     });
-    res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(userReimbursements, req.session.user.role, false)], req.session.user));
   } else {
     unauthorizedError(req, res);
   }
@@ -122,23 +95,34 @@ reimbursementRouter.get('/author/userId/:id', (req, res) => {
 
 // Get reimbursements by status
 reimbursementRouter.get('/status/:statusId', [authFinanceMiddleware, (req, res) => {
-  const userReimbursements = [];
-  reimbursements.forEach(element => {
-    if (element.status.statusId == req.params.statusId) {
-      userReimbursements.push(element);
-    }
-  });
-  res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(userReimbursements, req.session.user.role, false)], req.session.user));
+  if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
+    const idParam = +req.params.statusId; // convert to number
+    reimbursements.getReimbursementsByStatus(idParam).then(function (result) {
+      try {
+        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
+      } catch {
+        notFound(req, res);
+      }
+    });
+  } else {
+    unauthorizedError(req, res);
+  }
 }]);
 
 // Get specific reimbursement
 reimbursementRouter.get('/r/:id', [authFinanceMiddleware, (req, res) => {const userReimbursements = [];
-  reimbursements.forEach(element => {
-    if (element.reimbursementId == req.params.id) {
-      userReimbursements.push(element);
-    }
-  });
-  res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(userReimbursements, req.session.user.role, true)], req.session.user));
+  if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
+    const idParam = +req.params.id; // convert to number
+    reimbursements.getReimbursementsById(idParam).then(function (result) {
+      try {
+        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, true)], req.session.user));
+      } catch {
+        notFound(req, res);
+      }
+    });
+  } else {
+    unauthorizedError(req, res);
+  }
 }]);
 
 // Turn reimbursements array into a table
@@ -200,7 +184,7 @@ function reimbursementbody(filteredReimbursements, role, form) {
 }
 
 // Show all users
-function userbody() {
+function userbody(u) {
   let body = `<table><tr>
   <td>ID</td>
   <td>Username</td>
@@ -209,7 +193,7 @@ function userbody() {
   <td>Email</td>
   <td>Role</td>
   </tr>`;
-  Users.forEach(element => {
+  u.forEach(element => {
     body += `<tr>
     <td><a href="/reimbursements/author/userId/${element.userId}">${element.userId}</a></td>
     <td>${element.username}</td>
@@ -227,12 +211,12 @@ function userbody() {
 }
 
 // Show all statuses
-function statusbody() {
+function statusbody(rs) {
   let body = `<table><tr>
   <td>ID</td>
   <td>Status</td>
   </tr>`;
-  reimbursementstatuses.forEach(element => {
+  rs.forEach(element => {
     body += `<tr>
     <td><a href="/reimbursements/status/${element.statusId}">${element.statusId}</a></td>
     <td>${element.status}</td>

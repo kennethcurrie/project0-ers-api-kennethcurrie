@@ -1,4 +1,4 @@
-import express, { NextFunction } from 'express';
+import express from 'express';
 import bodyParser from 'body-parser';
 import session from 'express-session';
 import { authRouter } from './routers/auth.router';
@@ -31,7 +31,6 @@ app.use((req, res, next) => {
   next(); // will pass the request on to search for the next piece of middleware
 });
 
-
 // set up express to attach sessions
 const sess = {
   secret: '8675309',
@@ -52,7 +51,7 @@ app.use('/reimbursements', reimbursementRouter);
 app.use(function(req, res) {
    notFound(req, res);
 });
-app.use(function(error, req, res, next) {
+app.use(function(error, req, res) {
   internalError(req, res);
 });
 
