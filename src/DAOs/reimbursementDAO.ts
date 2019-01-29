@@ -12,21 +12,22 @@ export class ReimbursementDAO {
 
     // gets all reimbursements
     public async getReimbursementsById(id: number): Promise<Reimbursement[]> {
-        const pool = SessionFactory.getConnectionPool();
-        const client = await pool.connect();
+        const client = await SessionFactory.getConnectionPool().connect();
         const result = await client.query(`SELECT * from reimbursement where reimbursementid = ${id}`);
         const reimbursement = result.rows;
         const reimbursementData = [];
         await types.getAllReimbursementTypes().then(async function (reiType) {
             await statuses.getAllReimbursementStatuses().then(async function (reiStatus) {
                 await users.getAllUsers().then(function (u) {
+                    console.log('----');
                     reimbursement.forEach(rei => {
+                        console.log('loop');
                         reimbursementData.push(new Reimbursement(
                             rei.reimbursementid,
                             u.find(ele => ele.userId === rei.author),
                             rei.amount,
-                            rei.dateSubmitted,
-                            rei.dateResolved,
+                            rei.datesubmitted,
+                            rei.dateresolved,
                             rei.description,
                             rei.resolver,
                             reiStatus.find(ele => ele.statusId === rei.status),
@@ -42,8 +43,7 @@ export class ReimbursementDAO {
 
     // get all reimbusements that match provided status
     public async getReimbursementsByStatus(status_id: number): Promise<Reimbursement[]> {
-        const pool = SessionFactory.getConnectionPool();
-        const client = await pool.connect();
+        const client = await SessionFactory.getConnectionPool().connect();
         const result = await client.query(`SELECT * from reimbursement where status = ${status_id}`);
         const reimbursement = result.rows;
         const reimbursementData = [];
@@ -55,8 +55,8 @@ export class ReimbursementDAO {
                             rei.reimbursementid,
                             u.find(ele => ele.userId === rei.author),
                             rei.amount,
-                            rei.dateSubmitted,
-                            rei.dateResolved,
+                            rei.datesubmitted,
+                            rei.dateresolved,
                             rei.description,
                             rei.resolver,
                             reiStatus.find(ele => ele.statusId === rei.status),
@@ -84,8 +84,8 @@ export class ReimbursementDAO {
                             rei.reimbursementid,
                             u.find(ele => ele.userId === rei.author),
                             rei.amount,
-                            rei.dateSubmitted,
-                            rei.dateResolved,
+                            rei.datesubmitted,
+                            rei.dateresolved,
                             rei.description,
                             rei.resolver,
                             reiStatus.find(ele => ele.statusId === rei.status),
@@ -108,7 +108,7 @@ export class ReimbursementDAO {
         const client = await SessionFactory.getConnectionPool().connect();
         const text = `INSERT INTO reimbursement (
             author,             amount,
-            dateSubmitted,      dateResolved,
+            datesubmitted,      dateresolved,
             description,        resolver,
             status,             "type"
         ) VALUES (

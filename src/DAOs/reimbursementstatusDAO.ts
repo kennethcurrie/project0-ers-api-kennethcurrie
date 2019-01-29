@@ -16,7 +16,7 @@ export class ReimbursementStatusDAO {
                 reiStatus.status
             ));
         });
-        client.close();
+        // client.close();
         return reimbursementStatusData;
     }
 }

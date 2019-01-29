@@ -73,20 +73,18 @@ reimbursementRouter.get('/author', [authFinanceMiddleware, (req, res) => {
 // Show all Statuses
 reimbursementRouter.get('/status', [authFinanceMiddleware, (req, res) => {
   statuses.getAllReimbursementStatuses().then(function (result) {
-    res.status(200).send(pageGenerator(['Users', statusbody(result)], req.session.user));
+    res.status(200).send(pageGenerator(['Statuses', statusbody(result)], req.session.user));
   });
 }]);
 
 // get reimbursements by User
 reimbursementRouter.get('/author/userId/:id', (req, res) => {
-  if (req.params.id == req.session.user.id || req.session.user.role.role === 'Finance-Manager') {
+  if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
+    unauthorizedError(req, res);
+  } else if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
     const idParam = +req.params.id; // convert to number
     reimbursements.getReimbursementsByUserId(idParam).then(function (result) {
-      try {
-        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
-      } catch {
-        notFound(req, res);
-      }
+      res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
     });
   } else {
     unauthorizedError(req, res);
@@ -98,11 +96,7 @@ reimbursementRouter.get('/status/:statusId', [authFinanceMiddleware, (req, res) 
   if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
     const idParam = +req.params.statusId; // convert to number
     reimbursements.getReimbursementsByStatus(idParam).then(function (result) {
-      try {
-        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
-      } catch {
-        notFound(req, res);
-      }
+      res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, false)], req.session.user));
     });
   } else {
     unauthorizedError(req, res);
@@ -110,15 +104,11 @@ reimbursementRouter.get('/status/:statusId', [authFinanceMiddleware, (req, res) 
 }]);
 
 // Get specific reimbursement
-reimbursementRouter.get('/r/:id', [authFinanceMiddleware, (req, res) => {const userReimbursements = [];
+reimbursementRouter.get('/r/:id', [authFinanceMiddleware, (req, res) => {
   if (req.params.id == req.session.user.userId || req.session.user.role.role === 'Finance-Manager') {
     const idParam = +req.params.id; // convert to number
     reimbursements.getReimbursementsById(idParam).then(function (result) {
-      try {
-        res.status(200).send(pageGenerator(['Reimbursements', reimbursementbody(result, req.session.user.role, true)], req.session.user));
-      } catch {
         notFound(req, res);
-      }
     });
   } else {
     unauthorizedError(req, res);
@@ -144,8 +134,8 @@ function reimbursementbody(filteredReimbursements, role, form) {
     body += '<tr><td colspan="9">No Reimbursements</td></tr>';
   } else {
     filteredReimbursements.forEach(ele => {
-      const author = ele.author.firstName + ' ' + ele.author.lastName;
-      const  dateSubmitted = new Date(ele.dateSubmitted * 1000).toLocaleDateString('en-US');
+      const author = ele.author.User.firstName + ' ' + ele.author.User.lastName;
+      const dateSubmitted = new Date(ele.dateSubmitted * 1000).toLocaleDateString('en-US');
       let dateResolved;
       if (ele.dateResolved === 0) {
         dateResolved = '';
@@ -225,5 +215,6 @@ function statusbody(rs) {
   body += `</td>
   </tr>
   </table>`;
+  console.log(body);
   return body;
 }
