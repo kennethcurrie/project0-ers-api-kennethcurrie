@@ -3,7 +3,7 @@ body {
 }
 #main{
     background-color: #FFFFFF;
-    width: 800px;
+    max-width: 800px;
     margin: 0 auto; 
 }
 #primary{
@@ -50,5 +50,6 @@ td{
     border: #000000 solid 1px;
 }
 input{
-    width: 110px;
+    width:100%;
+    max-width: 110px;
 }
