@@ -6,7 +6,7 @@ import { userRouter } from './routers/user.router';
 import { reimbursementRouter } from './routers/reimbursement.router';
 import { notFound, internalError } from './middleware/error.middleware';
 
-export const port: number = 8080;
+export const port: number = 80;
 const methodOverride = require('method-override');
 const app = express();
 app.use('/', express.static(__dirname + '/public/'));
