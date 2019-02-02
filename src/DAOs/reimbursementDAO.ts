@@ -68,7 +68,7 @@ export class ReimbursementDAO {
     //  get all reimbursements where ${modifier}
     public async getReimbursementsByquery(modifier: string): Promise<Reimbursement[]> {
         const client = await SessionFactory.getConnectionPool().connect();
-        const result = await client.query(`${dbdump} where ${modifier} order by reimbursementid`);
+        const result = await client.query(`${dbdump} where ${modifier} order by datesubmitted`);
         const reimbursement = result.rows;
         const reimbursementData = [];
         reimbursement.forEach(rei => {

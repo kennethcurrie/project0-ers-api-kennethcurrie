@@ -66,9 +66,7 @@ authRouter.get('/login', (req, res) => {
 });
 
 authRouter.get('/logout', (req, res) => {
-  req.session.destroy(function(err) {
-    // cannot access session here
-  });
+  req.session.destroy(function(err) {});
   res.redirect('/');
 });
 
