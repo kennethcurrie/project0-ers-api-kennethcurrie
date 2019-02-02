@@ -10,16 +10,6 @@ export function authAdminMiddleware(req, res, next) {
   }
 }
 
-export function authFinanceMiddleware(req, res, next) {
-  if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
-     unauthorizedError(req, res);
-  } else if (req.session.user.role.role === 'Finance-Manager') {
-    next();
-  } else {
-    unauthorizedError(req, res);
-  }
-}
-
 export function authAdminFinanceMiddleware(req, res, next) {
   if (req.session === undefined || req.session.user === undefined || req.session.user.role.role === undefined) {
      unauthorizedError(req, res);
