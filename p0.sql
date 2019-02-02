@@ -54,9 +54,9 @@ insert into "role" ("role") values ('Admin'          );
 insert into "role" ("role") values ('Finance-Manager');
 insert into "role" ("role") values ('Associate'      );
 --users
-insert into "user" (username, "password", firstname, lastname, email, "role") values ('pjacks',  'password', 'Peter', 'Jackson', 'pjacks@projco.com', 1);
-insert into "user" (username, "password", firstname, lastname, email, "role") values ('kholmes', 'password', 'Kyle',  'Holmes',  'kholms@projco.com', 2);
-insert into "user" (username, "password", firstname, lastname, email, "role") values ('jsmall',  'password', 'John',  'Small',   'jsmal@projco.com',  3);
+insert into "user" (username, "password", firstname, lastname, email, "role") values ('pjacks',  md5('password'), 'Peter', 'Jackson', 'pjacks@projco.com', 1);
+insert into "user" (username, "password", firstname, lastname, email, "role") values ('kholmes', md5('password'), 'Kyle',  'Holmes',  'kholms@projco.com', 2);
+insert into "user" (username, "password", firstname, lastname, email, "role") values ('jsmall',  md5('password'), 'John',  'Small',   'jsmal@projco.com',  3);
 --reimbursementstatus
 insert into reimbursementstatus (status) values ('Pending');
 insert into reimbursementstatus (status) values ('Approved'  );

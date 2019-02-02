@@ -1,6 +1,7 @@
 import { User } from '../models/user';
 import { Role } from '../models/role';
 import { SessionFactory } from '../util/session-factory';
+import md5 from 'md5';
 
 // dirty, but better than death by pool
 const query = `select
@@ -56,7 +57,7 @@ export class UserDAO {
         let query = '';
         if (reqBody.username !== '') { query += `username = '${reqBody.username.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.password !== '') { query += ', '; }
-        if (reqBody.password !== '') { query += `"password" = '${reqBody.password.replace(`'`, ``)}' `; }
+        if (reqBody.password !== '') { query += `"password" = '${md5(reqBody.password.replace(`'`, ``))}' `; }
         if (query !== '' && reqBody.firstName !== '') { query += ', '; }
         if (reqBody.firstName !== '') { query += `firstname = '${reqBody.firstName.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.lastName !== '') { query += ', '; }

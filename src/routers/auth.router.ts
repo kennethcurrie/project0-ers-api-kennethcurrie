@@ -1,6 +1,7 @@
 import express from 'express';
 import { unauthorizedError } from '../middleware/error.middleware';
 import { UserDAO } from '../DAOs/userDAO';
+import md5 from 'md5';
 
 const users = new UserDAO();
 
@@ -36,7 +37,7 @@ authRouter.post('/login', (req, res) => {
   let passed = false;
   users.getAllUsers().then(function (result) {
     result.forEach(element => {
-      if (req.body.username === element.username && req.body.password === element.password) {
+      if (req.body.username === element.username && md5(req.body.password) === element.password) {
         element.password = '******';
         req.session.user = element;
         passed = true;
