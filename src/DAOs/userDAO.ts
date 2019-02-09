@@ -62,6 +62,8 @@ export class UserDAO {
         if (reqBody.firstName !== '') { query += `firstname = '${reqBody.firstName.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.lastName !== '') { query += ', '; }
         if (reqBody.lastName !== '') { query += `"lastname" = '${reqBody.lastName.replace(`'`, ``)}' `; }
+        if (query !== '' && reqBody.email !== '') { query += ', '; }
+        if (reqBody.email !== '') { query += `"email" = '${reqBody.email.replace(`'`, ``)}' `; }
         if (query !== '' && reqBody.role !== '') { query += ', '; }
         if (reqBody.role !== '') { query += `"role" = ${reqBody.role} `; }
         await client.query(`UPDATE "user" set ${query} WHERE userid = ${reqBody.userId};`);
